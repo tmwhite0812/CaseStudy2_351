@@ -1,1 +1,58 @@
-main file
+
+Ts = 0.1;
+dt = 0.01;
+fs = 1/dt;
+f = [0:fs/101:fs-fs/101]; % Made frequency vector of size 101
+
+w20 = 2*pi*20; % 20 Hz
+w40 = 2*pi*40; % 40 Hz
+
+
+t = -5*Ts:dt:5*Ts;
+
+y = sinc(t/Ts).*exp(w40*i.* t);  % 40Hz shift or it least it should be
+x = sinc(t/Ts).^2.* exp(w20*i.* t);  % 20Hz shift or it least it should be
+
+u = x+y; % Combine into one plot
+
+tri = fft(x); % individual fft and combined fft
+rec = fft(y);
+U = fft(u);
+
+figure
+subplot(2,1,1)
+title("Sinc^2 vs Sinc")
+plot(t,x);
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc^2")
+subplot(2,1,2)
+plot(t,y);
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc")
+
+figure
+title("Pulse shapes in frequency")
+plot(f,abs(tri))
+hold on 
+plot(f,abs(rec))
+xlabel("Frequency (Hz)")
+ylabel("Amplitude")
+
+legend("Triangle","rec")
+
+figure 
+title("Combined fft into one plot")
+plot(f,abs(U))
+xlabel("Frequency (Hz)")
+ylabel("Amplitude")
+%% Up Convert
+
+% not sure if I did this part right 
+w = 2*pi*10;
+u = u .* cos(w.*t);
+check = fft(u);
+
+figure
+plot(f,abs(check))
