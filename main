@@ -1,42 +1,53 @@
-
+%% Using Sinc^2
 Ts = 0.1;
 dt = 0.01;
 fs = 1/dt;
-f = [0:fs/101:fs-fs/101]; % Made frequency vector of size 101
+f = [0:fs/41:fs-fs/41]; % Made frequency vector of size 41
 
+w10 = 2*pi*10; % 10 Hz
 w20 = 2*pi*20; % 20 Hz
-w40 = 2*pi*40; % 40 Hz
+w30 = 2*pi*30;
 
+t = -2*Ts:dt:2*Ts;
 
-t = -5*Ts:dt:5*Ts;
+z = sinc(0.25*t/Ts).^2.*exp(w30*i.*t);
+y = sinc(0.25*t/Ts).^2.*exp(w20*i.* t);  % 20Hz shift or it least it should be
+x = sinc(0.25*t/Ts).^2.* exp(w10*i.* t);  % 10Hz shift or it least it should be
 
-y = sinc(t/Ts).*exp(w40*i.* t);  % 40Hz shift or it least it should be
-x = sinc(t/Ts).^2.* exp(w20*i.* t);  % 20Hz shift or it least it should be
-
-u = x+y; % Combine into one plot
+u = x+y+z; % Combine into one plot
 
 tri = fft(x); % individual fft and combined fft
-rec = fft(y);
+tri2 = fft(y);
+tri3 = fft(z);
+
 U = fft(u);
 
 figure
-subplot(2,1,1)
+subplot(3,1,1)
 title("Sinc^2 vs Sinc")
 plot(t,x);
 xlabel("Time (s)")
 ylabel("Amplitude")
-legend("Sinc^2")
-subplot(2,1,2)
+legend("Sinc (10Hz)")
+
+subplot(3,1,2)
 plot(t,y);
 xlabel("Time (s)")
 ylabel("Amplitude")
-legend("Sinc")
+legend("Sinc (20Hz)")
+
+subplot(3,1,3)
+plot(t,z)
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (30Hz)")
 
 figure
 title("Pulse shapes in frequency")
 plot(f,abs(tri))
 hold on 
-plot(f,abs(rec))
+plot(f,abs(tri2))
+plot(f,abs(tri3))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
@@ -47,23 +58,64 @@ title("Combined fft into one plot")
 plot(f,abs(U))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
-%% Up Conversion
+%% Use Sinc 
+Ts = 0.1;
+dt = 0.005;
+fs = 1/dt;
+
+f = [0:fs/81:fs-fs/81];
+t = -2*Ts:dt:2*Ts;
+
+a = sinc(t/Ts).*exp(w10*i.*t);
+b = sinc(t/Ts).*exp(w20*i.* t);  
+c = sinc(t/Ts).* exp(w30*i.* t);
+
+u = a+b+c; % Combine into one plot
+
+tri = fft(a); % individual fft and combined fft
+tri2 = fft(b);
+tri3 = fft(c);
+
+U = fft(u);
+
+figure
+subplot(3,1,1)
+title("Sinc^2 vs Sinc")
+plot(t,a);
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (10Hz)")
+
+subplot(3,1,2)
+plot(t,b);
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (20Hz)")
+
+subplot(3,1,3)
+plot(t,c)
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (30Hz)")
+
+figure
+title("Pulse shapes in frequency")
+plot(f,abs(tri))
+hold on 
+plot(f,abs(tri2))
+plot(f,abs(tri3))
+xlabel("Frequency (Hz)")
+ylabel("Amplitude")
+
+legend("Triangle","rec")
+
+figure 
+title("Combined fft into one plot")
+plot(f,abs(U))
+xlabel("Frequency (Hz)")
+ylabel("Amplitude")
+
+%% Up Convert
 
 % not sure if I did this part right 
-w = 2*pi*30;
-up_converted = u .* cos(w.*t);
-check = fft(up_converted);
-
-figure
-plot(f,abs(check))
-
-down_converted = up_converted.*cos(w.*t);
-down_converted = lowpass(down_converted, dt);
-check = fft(down_converted);
-
-figure
-plot(f, abs(check));
-
-
-
-
+w = 2*pi*10;
