@@ -47,12 +47,23 @@ title("Combined fft into one plot")
 plot(f,abs(U))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
-%% Up Convert
+%% Up Conversion
 
 % not sure if I did this part right 
-w = 2*pi*10;
-u = u .* cos(w.*t);
-check = fft(u);
+w = 2*pi*30;
+up_converted = u .* cos(w.*t);
+check = fft(up_converted);
 
 figure
 plot(f,abs(check))
+
+down_converted = up_converted.*cos(w.*t);
+down_converted = lowpass(down_converted, dt);
+check = fft(down_converted);
+
+figure
+plot(f, abs(check));
+
+
+
+
