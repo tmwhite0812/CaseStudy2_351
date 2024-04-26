@@ -1,3 +1,4 @@
+
 %% Using Sinc^2
 Ts = 0.1;
 dt = 0.01;
@@ -11,9 +12,9 @@ w30 = 2*pi*30;
 
 t = -2*Ts:dt:2*Ts;
 
-z = sinc(0.25*t/Ts).^2.*exp(w30*i.*t);
-y = sinc(0.25*t/Ts).^2.*exp(w20*i.* t);  % 20Hz shift or it least it should be
-x = sinc(0.25*t/Ts).^2.* exp(w10*i.* t);  % 10Hz shift or it least it should be
+z = sinc(t/Ts).^2.*exp(w30*i.*t);
+y = sinc(t/Ts).^2.*exp(w20*i.* t);  % 20Hz shift or it least it should be
+x = sinc(t/Ts).^2.* exp(w10*i.* t);  % 10Hz shift or it least it should be
 
 u = x+y+z; % Combine into one plot
 
@@ -120,9 +121,9 @@ ylabel("Amplitude")
 w = 2*pi*10;
 
 %-shuafrom here down
-up_a = cos(w*t).*a;
-up_b = cos(w*t).*b;
-up_c = cos(w*t).*c;
+up_a = cos(w*t).*a; % Cos times sinc shifted by 10 Hz
+up_b = cos(w*t).*b; % Cos times sinc shifted by 20 Hz
+up_c = cos(w*t).*c; % Cos times sinc shifted by 30 Hz
 
 up_all = cos(w*t).*u; % Combined pulses being up converted 
 
@@ -201,7 +202,7 @@ stem(0:dt:Ts*4*(N-1) ,x_n), title("Random Values Between [-1,1]");
 xlabel("Time(s)")
 
 
-message = conv(up_recU, x_n);
+message = conv(up_all, x_n);
 correct = zeros(size(message)); % Hold on to correct values to compare later
 
 for i = 1:80:size(message,2)
@@ -216,6 +217,9 @@ end
 figure
 stem(0:dt: Ts * 4 * N, message); % Show original msg
 xlabel("Time(s)")
+
+figure 
+plot(t,u), title("Function being Conv with random bits")
 
 
 %% noise
@@ -274,4 +278,3 @@ ylabel("Amplitude")
 % down = conv(noise_sig1.*cos(w*t), 
 
 % I want to know the details of what kind of LPF we have to use 
-
