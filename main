@@ -119,3 +119,53 @@ ylabel("Amplitude")
 
 % not sure if I did this part right 
 w = 2*pi*10;
+%-shuafrom here down
+up_a = cos(w*t).*a;
+up_b = cos(w*t).*b;
+up_c = cos(w*t).*c;
+
+up_tri = fft(up_a); % individual fft and combined fft
+up_tri2 = fft(up_b);
+up_tri3 = fft(up_c);
+
+figure
+subplot(3,1,1)
+title("Sinc^2 vs Sinc")
+plot(t,up_a);
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (10Hz)")
+
+subplot(3,1,2)
+plot(t,up_b);
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (20Hz)")
+
+subplot(3,1,3)
+plot(t,up_c)
+xlabel("Time (s)")
+ylabel("Amplitude")
+legend("Sinc (30Hz)")
+
+figure
+subplot(3,1,1)
+title("pulse in freq")
+plot(f,abs(up_tri));
+xlabel("Frequency sinc 10(Hz)")
+ylabel("Amplitude")
+
+legend("Triangle","rec")
+
+subplot(3,1,2)
+plot(f,abs(up_tri2));
+xlabel("Frequency sinc 20(Hz)")
+ylabel("Amplitude")
+
+legend("Triangle","rec")
+subplot(3,1,3)
+plot(f,abs(up_tri3))
+xlabel("Frequency sinc 30(Hz)")
+ylabel("Amplitude")
+
+legend("Triangle","rec")
