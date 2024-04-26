@@ -169,3 +169,47 @@ xlabel("Frequency sinc 30(Hz)")
 ylabel("Amplitude")
 
 legend("Triangle","rec")
+
+%% noise
+
+N = 5;
+
+sigma = 1;  % Arbitrary Val. was changed for different coefficients
+noise1 = sigma * randn(1,length(up_a));
+noise_sig1 = noise1 + up_a;
+noise2 = sigma * randn(1,length(up_b));
+noise_sig2 = noise2 + up_b;
+noise3 = sigma * randn(1,length(up_c));
+noise_sig3 = noise3 + up_c;
+
+% Put all previous parts together and plot
+
+figure
+stem(0:fs: Ts * 2 * N, up_a), title("Noise-Free Message A (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure 
+plot(0:fs: Ts * 2 * N, noise_sig1), title("Noisy Message A (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure
+stem(0:fs: Ts * 2 * N, up_b), title("Noise-Free Message b (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure 
+plot(0:fs: Ts * 2 * N, noise_sig2), title("Noisy Message B (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure
+stem(0:fs: Ts * 2 * N, up_c), title("Noise-Free Message C (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure 
+plot(0:fs: Ts * 2 * N, noise_sig3), title("Noisy Message C (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
