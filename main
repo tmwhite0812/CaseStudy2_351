@@ -2,6 +2,7 @@
 Ts = 0.1;
 dt = 0.01;
 fs = 1/dt;
+period = 0.1/fs;
 f = [0:fs/41:fs-fs/41]; % Made frequency vector of size 41
 
 w10 = 2*pi*10; % 10 Hz
@@ -72,9 +73,9 @@ c = sinc(t/Ts).* exp(w30*i.* t);
 
 u = a+b+c; % Combine into one plot
 
-tri = fft(a); % individual fft and combined fft
-tri2 = fft(b);
-tri3 = fft(c);
+rec = fft(a); % individual fft and combined fft
+rec2 = fft(b);
+rec3 = fft(c);
 
 U = fft(u);
 
@@ -100,14 +101,13 @@ legend("Sinc (30Hz)")
 
 figure
 title("Pulse shapes in frequency")
-plot(f,abs(tri))
+plot(f,abs(rec))
 hold on 
-plot(f,abs(tri2))
-plot(f,abs(tri3))
+plot(f,abs(rec2))
+plot(f,abs(rec3))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
-legend("Triangle","rec")
 
 figure 
 title("Combined fft into one plot")
@@ -117,16 +117,20 @@ ylabel("Amplitude")
 
 %% Up Convert
 
-% not sure if I did this part right 
 w = 2*pi*10;
+
 %-shuafrom here down
 up_a = cos(w*t).*a;
 up_b = cos(w*t).*b;
 up_c = cos(w*t).*c;
 
-up_tri = fft(up_a); % individual fft and combined fft
-up_tri2 = fft(up_b);
-up_tri3 = fft(up_c);
+up_all = cos(w*t).*u; % Combined pulses being up converted 
+
+up_rec = fft(up_a); % individual fft and combined fft
+up_rec2 = fft(up_b);
+up_rec3 = fft(up_c);
+
+up_recU = fft(up_all); 
 
 figure
 subplot(3,1,1)
@@ -151,65 +155,123 @@ legend("Sinc (30Hz)")
 figure
 subplot(3,1,1)
 title("pulse in freq")
-plot(f,abs(up_tri));
+plot(f,abs(up_rec));
 xlabel("Frequency sinc 10(Hz)")
 ylabel("Amplitude")
 
-legend("Triangle","rec")
+legend("Rectangle","rec")
 
 subplot(3,1,2)
-plot(f,abs(up_tri2));
+plot(f,abs(up_rec2));
 xlabel("Frequency sinc 20(Hz)")
 ylabel("Amplitude")
 
-legend("Triangle","rec")
+legend("Rectangle","rec")
 subplot(3,1,3)
-plot(f,abs(up_tri3))
+plot(f,abs(up_rec3))
 xlabel("Frequency sinc 30(Hz)")
 ylabel("Amplitude")
 
-legend("Triangle","rec")
+legend("Rectangle","rec")
+
+figure 
+plot(f,abs(up_recU)), title("All combined") % This looks wrong asf  
+xlabel("Frequency (Hz)")
+ylabel("Amplitude")
+
+legend("Rectangle","rec")
+
+
+
+%% Create Message 
+N = 5; % Number of bits
+len = 81; % length of sinc plots 
+
+% I think Tyler made this a func. in HW6 so maybe we should do that again. 
+range = 0:(len - 1): (N - 1) * len;
+x_n = zeros(1,len * (N-1) - (N-1));
+
+for n = 1:(len - 1)/2: (N-1) * len
+    x_n(n) = 2*((rand(1,1)>0.5)-0.5); % Randomly makes N impulses
+end
+%
+
+figure
+stem(0:dt:Ts*4*(N-1) ,x_n), title("Random Values Between [-1,1]");
+xlabel("Time(s)")
+
+
+message = conv(up_recU, x_n);
+correct = zeros(size(message)); % Hold on to correct values to compare later
+
+for i = 1:80:size(message,2)
+     if (message(i) > 0)
+         correct(i) = 1;
+     end
+     if (message(i) < 0)
+         correct(i) = -1;
+     end
+end
+
+figure
+stem(0:dt: Ts * 4 * N, message); % Show original msg
+xlabel("Time(s)")
+
 
 %% noise
 
 N = 5;
 
 sigma = 1;  % Arbitrary Val. was changed for different coefficients
-noise1 = sigma * randn(1,length(up_a));
-noise_sig1 = noise1 + up_a;
-noise2 = sigma * randn(1,length(up_b));
-noise_sig2 = noise2 + up_b;
-noise3 = sigma * randn(1,length(up_c));
-noise_sig3 = noise3 + up_c;
 
+noise1 = sigma * randn(1,length(message));
+noise_sig1 = noise1 + message; % This message is made up of the three pulse shapes at 10,20,30Hz respectively 
+
+noise2 = sigma * randn(1,length(up_b)); % Still haven't made
+noise_sig2 = noise2 + up_b;
+
+noise3 = sigma * randn(1,length(up_c)); % Still haven't made
+noise_sig3 = noise3 + up_c;
+ 
 % Put all previous parts together and plot
 
 figure
-stem(0:fs: Ts * 2 * N, up_a), title("Noise-Free Message A (1/2*Ts)")
+stem(0:dt:Ts *4 * N, message), title("Noise-Free Message A (1/2*Ts)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
 figure 
-plot(0:fs: Ts * 2 * N, noise_sig1), title("Noisy Message A (1/2*Ts)")
+plot(0:dt: Ts * 4 * N, noise_sig1), title("Noisy Message A (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+
+%% Still need to make other message 
+figure
+stem(0:period: Ts * 4 * N, up_b), title("Noise-Free Message b (1/2*Ts)")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure 
+plot(0:period: Ts * 4 * N, noise_sig2), title("Noisy Message B (1/2*Ts)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
 figure
-stem(0:fs: Ts * 2 * N, up_b), title("Noise-Free Message b (1/2*Ts)")
+stem(0:period: Ts * 4 * N, up_c), title("Noise-Free Message C (1/2*Ts)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
 figure 
-plot(0:fs: Ts * 2 * N, noise_sig2), title("Noisy Message B (1/2*Ts)")
+plot(0:period: Ts * 4 * N, noise_sig3), title("Noisy Message C (1/2*Ts)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
-figure
-stem(0:fs: Ts * 2 * N, up_c), title("Noise-Free Message C (1/2*Ts)")
-xlabel("Time(s)")
-ylabel("Amplitude")
 
-figure 
-plot(0:fs: Ts * 2 * N, noise_sig3), title("Noisy Message C (1/2*Ts)")
-xlabel("Time(s)")
-ylabel("Amplitude")
+%% Down Convert and Analyze (Assuming past code work and is right)
+
+
+% down = conv(noise_sig1.*cos(w*t), 
+
+% I want to know the details of what kind of LPF we have to use 
+
