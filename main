@@ -1,4 +1,3 @@
-
 %% Using Sinc^2
 Ts = 0.1;
 dt = 0.01;
@@ -12,9 +11,9 @@ w30 = 2*pi*30;
 
 t = -2*Ts:dt:2*Ts;
 
-z = sinc(t/Ts).^2.*exp(w30*i.*t);
-y = sinc(t/Ts).^2.*exp(w20*i.* t);  % 20Hz shift or it least it should be
-x = sinc(t/Ts).^2.* exp(w10*i.* t);  % 10Hz shift or it least it should be
+z = sinc(0.25*t/Ts).^2.*exp(w30*i.*t);
+y = sinc(0.25*t/Ts).^2.*exp(w20*i.* t);  % 20Hz shift or it least it should be
+x = sinc(0.25*t/Ts).^2.* exp(w10*i.* t);  % 10Hz shift or it least it should be
 
 u = x+y+z; % Combine into one plot
 
@@ -47,7 +46,7 @@ legend("Sinc (30Hz)")
 figure
 title("Pulse shapes in frequency")
 plot(f,abs(tri))
-hold on 
+hold on
 plot(f,abs(tri2))
 plot(f,abs(tri3))
 xlabel("Frequency (Hz)")
@@ -55,12 +54,12 @@ ylabel("Amplitude")
 
 legend("Triangle","rec")
 
-figure 
+figure
 title("Combined fft into one plot")
 plot(f,abs(U))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
-%% Use Sinc 
+%% Use Sinc
 Ts = 0.1;
 dt = 0.005;
 fs = 1/dt;
@@ -69,7 +68,7 @@ f = [0:fs/81:fs-fs/81];
 t = -2*Ts:dt:2*Ts;
 
 a = sinc(t/Ts).*exp(w10*i.*t);
-b = sinc(t/Ts).*exp(w20*i.* t);  
+b = sinc(t/Ts).*exp(w20*i.* t);
 c = sinc(t/Ts).* exp(w30*i.* t);
 
 u = a+b+c; % Combine into one plot
@@ -103,14 +102,14 @@ legend("Sinc (30Hz)")
 figure
 title("Pulse shapes in frequency")
 plot(f,abs(rec))
-hold on 
+hold on
 plot(f,abs(rec2))
 plot(f,abs(rec3))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
 
-figure 
+figure
 title("Combined fft into one plot")
 plot(f,abs(U))
 xlabel("Frequency (Hz)")
@@ -119,19 +118,20 @@ ylabel("Amplitude")
 %% Up Convert
 
 w = 2*pi*10;
-
+w2 = 2*pi*20;
+w3 = 2*pi*30;
 %-shuafrom here down
-up_a = cos(w*t).*a; % Cos times sinc shifted by 10 Hz
-up_b = cos(w*t).*b; % Cos times sinc shifted by 20 Hz
-up_c = cos(w*t).*c; % Cos times sinc shifted by 30 Hz
+up_a = cos(w*t).*a;
+up_b = cos(w2*t).*b;
+up_c = cos(w3*t).*c;
 
-up_all = cos(w*t).*u; % Combined pulses being up converted 
+up_all = up_a + up_b + up_c; % Combined pulses being up converted
 
 up_rec = fft(up_a); % individual fft and combined fft
 up_rec2 = fft(up_b);
 up_rec3 = fft(up_c);
 
-up_recU = fft(up_all); 
+up_recU = fft(up_all);
 
 figure
 subplot(3,1,1)
@@ -175,8 +175,8 @@ ylabel("Amplitude")
 
 legend("Rectangle","rec")
 
-figure 
-plot(f,abs(up_recU)), title("All combined") % This looks wrong asf  
+figure
+plot(f,abs(up_recU)), title("All combined") % This looks wrong asf
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
@@ -184,97 +184,192 @@ legend("Rectangle","rec")
 
 
 
-%% Create Message 
+%% Create Message
+% - Recent changes here
 N = 5; % Number of bits
-len = 81; % length of sinc plots 
+len = 81; % length of sinc plots
+t = 0:dt:Ts*4*N;
 
-% I think Tyler made this a func. in HW6 so maybe we should do that again. 
-range = 0:(len - 1): (N - 1) * len;
-x_n = zeros(1,len * (N-1) - (N-1));
+x_n = bitRate(1);
 
-for n = 1:(len - 1)/2: (N-1) * len
-    x_n(n) = 2*((rand(1,1)>0.5)-0.5); % Randomly makes N impulses
-end
-%
 
 figure
 stem(0:dt:Ts*4*(N-1) ,x_n), title("Random Values Between [-1,1]");
 xlabel("Time(s)")
 
 
-message = conv(up_all, x_n);
-correct = zeros(size(message)); % Hold on to correct values to compare later
+messageA = conv(x_n, up_rec);  % Create individual signals with each sinc function
+messageB = conv(x_n, up_rec2);
+messageC = conv(x_n, up_rec3);
+messageU = messageA + messageB + messageC;
 
-for i = 1:80:size(message,2)
-     if (message(i) > 0)
-         correct(i) = 1;
-     end
-     if (message(i) < 0)
-         correct(i) = -1;
-     end
-end
+checkA = correc(1, messageA); % Hold on to correct values to compare later
+checkB = correc(1, messageB);
+checkC = correc(1, messageC);
+checkU = correc(1, messageU);
+
+% figure
+% plot(t, messageA), title("Message A") % Show original msg
+% xlabel("Time(s)")
+%
+% figure
+% plot(t, messageB), title("Message B") % Show original msg
+% xlabel("Time(s)")
+%
+% figure
+% plot(t, messageC), title("Message C") % Show original msg
+% xlabel("Time(s)")
 
 figure
-stem(0:dt: Ts * 4 * N, message); % Show original msg
+plot(t, messageU), title("Message U") % Show original msg
 xlabel("Time(s)")
-
-figure 
-plot(t,u), title("Function being Conv with random bits")
-
-
 %% noise
 
 N = 5;
 
 sigma = 1;  % Arbitrary Val. was changed for different coefficients
 
-noise1 = sigma * randn(1,length(message));
-noise_sig1 = noise1 + message; % This message is made up of the three pulse shapes at 10,20,30Hz respectively 
+noise = sigma * randn(1,length(messageA));
 
-noise2 = sigma * randn(1,length(up_b)); % Still haven't made
-noise_sig2 = noise2 + up_b;
+noise_sigA = noise + messageA; % This message is made up of the three pulse shapes at 10,20,30Hz respectively
+noise_sigB = noise + messageB;
+noise_sigC = noise + messageC;
+noise_sigU = noise_sigA + noise_sigB + noise_sigC;
 
-noise3 = sigma * randn(1,length(up_c)); % Still haven't made
-noise_sig3 = noise3 + up_c;
- 
-% Put all previous parts together and plot
 
 figure
-stem(0:dt:Ts *4 * N, message), title("Noise-Free Message A (1/2*Ts)")
-xlabel("Time(s)")
-ylabel("Amplitude")
-
-figure 
-plot(0:dt: Ts * 4 * N, noise_sig1), title("Noisy Message A (1/2*Ts)")
-xlabel("Time(s)")
-ylabel("Amplitude")
-
-
-%% Still need to make other message 
-figure
-stem(0:period: Ts * 4 * N, up_b), title("Noise-Free Message b (1/2*Ts)")
-xlabel("Time(s)")
-ylabel("Amplitude")
-
-figure 
-plot(0:period: Ts * 4 * N, noise_sig2), title("Noisy Message B (1/2*Ts)")
+plot(t, messageU), title("Noise-Free Message (All)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
 figure
-stem(0:period: Ts * 4 * N, up_c), title("Noise-Free Message C (1/2*Ts)")
+plot(t, noise_sigU), title("Noisy Message (All)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
-figure 
-plot(0:period: Ts * 4 * N, noise_sig3), title("Noisy Message C (1/2*Ts)")
-xlabel("Time(s)")
-ylabel("Amplitude")
+
+% figure
+% stem(t, messageA), title("Noise-Free Message b (1/2*Ts)")
+% xlabel("Time(s)")
+% ylabel("Amplitude")
+%
+% figure
+% stem(t, up_b), title("Noise-Free Message b (1/2*Ts)")
+% xlabel("Time(s)")
+% ylabel("Amplitude")
+%
+% figure
+% plot(t, noise_sig2), title("Noisy Message B (1/2*Ts)")
+% xlabel("Time(s)")
+% ylabel("Amplitude")
+%
+% figure
+% stem(t, up_c), title("Noise-Free Message C (1/2*Ts)")
+% xlabel("Time(s)")
+% ylabel("Amplitude")
+%
+% figure
+% plot(t, noise_sig3), title("Noisy Message C (1/2*Ts)")
+% xlabel("Time(s)")
+% ylabel("Amplitude")
 
 
 %% Down Convert and Analyze (Assuming past code work and is right)
 
+% Signed based match
+downMsgA = noise_sigA .* cos(w*t);
+compareA = signBased(downMsgA, 1);
 
-% down = conv(noise_sig1.*cos(w*t), 
+downMsgB = noise_sigB .* cos(w2*t);
+compareB = signBased(downMsgB, 1);
 
-% I want to know the details of what kind of LPF we have to use 
+downMsgC = noise_sigC .* cos(w3*t);
+compareC = signBased(downMsgC, 1);
+
+figure
+stem(t,compareA);
+hold on
+stem(t, checkA);
+
+figure
+stem(t,compareB);
+hold on
+stem(t, checkB);
+
+figure
+stem(t,compareC);
+hold on
+stem(t, checkC);
+
+% Matched Filter Received
+
+downMsgA = conv(downMsgA, a, "same");
+downMsgB = conv(downMsgB, b, "same");
+downMsgC = conv(downMsgC, c, "same");
+
+
+
+
+
+
+
+
+
+
+
+
+%% Functions Used
+
+function [x_n] = bitRate(x)
+N = 5;
+len = 81;
+
+range = 0:(len - 1)/x: (N-1) * len;
+x_n = zeros(1,len * (N-1) - (N-1));
+
+for n = 1:(len - 1)/x:(N-1) * len
+    x_n(n) = 2 * ((rand(1,1)>0.5)-0.5);
+end
+
+end
+
+function [signBasedFilter] = signBased(noise_sig, x)
+signBasedFilter = zeros(size(noise_sig));
+
+for i = 1:80:size(noise_sig,2)
+    if (noise_sig(i) > 0)
+        signBasedFilter(i) = 1;
+    end
+    if (noise_sig(i) < 0)
+        signBasedFilter(i) = -1;
+    end
+end
+end
+
+function [correct] = correc(x, message)
+correct = zeros(size(message));
+
+for i = 1:size(message,2)/x:size(message,2)
+    if (message(i) > 0)
+        correct(i) = 1;
+    end
+    if (message(i) < 0)
+        correct(i) = 0;
+    end
+end
+end
+
+function [matchedFilter] = matched(matchedFilter_Conv, x)
+
+matchedFilter = zeros(1,size(matchedFilter_Conv,2));
+
+for i = 1:size(matchedFilter_Cov,2)/x:(size(matchedFilter_Conv,2) - 1)
+    if (matchedFilter_Conv(i) > 0)
+        matchedFilter(i) = 1;
+    end
+    if (matchedFilter_Conv(i) < 0)
+        matchedFilter(i) = -1;
+    end
+end
+end
+
