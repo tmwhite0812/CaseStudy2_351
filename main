@@ -160,7 +160,7 @@ plot(f,abs(up_rec));
 xlabel("Frequency sinc 10(Hz)")
 ylabel("Amplitude")
 
-legend("Rectangle","rec")
+legend("Rectangle")
 
 subplot(3,1,2)
 plot(f,abs(up_rec2));
@@ -180,7 +180,7 @@ plot(f,abs(up_recU)), title("All combined") % This looks wrong asf
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
-legend("Rectangle","rec")
+legend("Rectangle")
 
 
 
@@ -286,34 +286,44 @@ compareB = signBased(downMsgB, 1);
 downMsgC = noise_sigC .* cos(w3*t);
 compareC = signBased(downMsgC, 1);
 
-figure
-stem(t,compareA);
-hold on
-stem(t, checkA);
+compareU = (compareA + compareB + compareC) /3;
 
-figure
-stem(t,compareB);
-hold on
-stem(t, checkB);
+% figure
+% stem(t,compareA), title("Check A");
+% hold on
+% stem(t, checkA);
+% 
+% figure
+% stem(t,compareB), title("Check B");
+% hold on
+% stem(t, checkB), title("Check C");
+% 
+% figure
+% stem(t,compareC);
+% hold on
+% stem(t, checkC);
 
-figure
-stem(t,compareC);
+figure 
+stem(t, compareU)
 hold on
-stem(t, checkC);
+stem(t, checkU)
+
+%%
 
 % Matched Filter Received
 
 downMsgA = conv(downMsgA, a, "same");
 downMsgB = conv(downMsgB, b, "same");
 downMsgC = conv(downMsgC, c, "same");
+downMsgU = conv(downMsgU, u, "same");
 
+figure 
+plot(t,downMsgU)
+%%
+compareU = signBased(downMsgU,1);
 
-
-
-
-
-
-
+figure 
+stem(t,compareU)
 
 
 
