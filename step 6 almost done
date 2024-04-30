@@ -190,7 +190,23 @@ N = 5; % Number of bits
 len = 81; % length of sinc plots
 t = 0:dt:Ts*4*N;
 
+
+
 x_n = bitRate(1);
+
+message = 'I love ESE 351! :)';
+binary = str2num(reshape(dec2bin(message)',1,[])');
+x_message = binaryConvert(binary);
+
+newLength = numel(x_message) * (len-1);
+
+newArray = zeros(1, newLength);
+
+for i = 1:numel(x_message)
+    newArray((i - 1) * (len-1) + 1) = x_message(i);
+end
+
+x_message = newArray;  %Binary array representing text, with same bitrate as x_n
 
 
 figure
@@ -288,6 +304,8 @@ compareC = signBased(downMsgC, 1);
 
 compareU = (compareA + compareB + compareC) /3;
 
+downMsgU = downMsgC + downMsgA + downMsgB;
+
 % figure
 % stem(t,compareA), title("Check A");
 % hold on
@@ -382,4 +400,20 @@ for i = 1:size(matchedFilter_Cov,2)/x:(size(matchedFilter_Conv,2) - 1)
     end
 end
 end
+
+function [newBinary] = binaryConvert(binary)
+
+for i=1:length(binary)
+    if (binary(i)==0)
+        binary(i) = -1;
+    end
+end
+
+newBinary = binary;
+
+end
+
+
+
+
 
