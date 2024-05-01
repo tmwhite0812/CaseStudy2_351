@@ -5,60 +5,35 @@ fs = 1/dt;
 period = 0.1/fs;
 f = [0:fs/41:fs-fs/41]; % Made frequency vector of size 41
 
-w10 = 2*pi*10; % 10 Hz
-w20 = 2*pi*20; % 20 Hz
-w30 = 2*pi*30;
 
 t = -2*Ts:dt:2*Ts;
 
-z = sinc(0.25*t/Ts).^2.*exp(w30*i.*t);
-y = sinc(0.25*t/Ts).^2.*exp(w20*i.* t);  % 20Hz shift or it least it should be
-x = sinc(0.25*t/Ts).^2.* exp(w10*i.* t);  % 10Hz shift or it least it should be
+z = sinc(t/Ts);
+y = z;
+x = z;
+
 
 u = x+y+z; % Combine into one plot
 
-tri = fft(x); % individual fft and combined fft
-tri2 = fft(y);
-tri3 = fft(z);
+tri = fft(x); % individual fft 
 
-U = fft(u);
 
 figure
-subplot(3,1,1)
-title("Sinc^2 vs Sinc")
+title("Sinc^2")
 plot(t,x);
 xlabel("Time (s)")
 ylabel("Amplitude")
-legend("Sinc (10Hz)")
+legend("Sinc")
 
-subplot(3,1,2)
-plot(t,y);
-xlabel("Time (s)")
-ylabel("Amplitude")
-legend("Sinc (20Hz)")
-
-subplot(3,1,3)
-plot(t,z)
-xlabel("Time (s)")
-ylabel("Amplitude")
-legend("Sinc (30Hz)")
 
 figure
 title("Pulse shapes in frequency")
 plot(f,abs(tri))
-hold on
-plot(f,abs(tri2))
-plot(f,abs(tri3))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
-legend("Triangle","rec")
+legend("Triangle")
 
-figure
-title("Combined fft into one plot")
-plot(f,abs(U))
-xlabel("Frequency (Hz)")
-ylabel("Amplitude")
 %% Use Sinc
 Ts = 0.1;
 dt = 0.005;
@@ -67,53 +42,28 @@ fs = 1/dt;
 f = [0:fs/81:fs-fs/81];
 t = -2*Ts:dt:2*Ts;
 
-a = sinc(t/Ts).*exp(w10*i.*t);
-b = sinc(t/Ts).*exp(w20*i.* t);
-c = sinc(t/Ts).* exp(w30*i.* t);
+a = sinc(t/Ts);
+b = a;
+c = a;
 
-u = a+b+c; % Combine into one plot
+rec = fft(a); % individual fft 
 
-rec = fft(a); % individual fft and combined fft
-rec2 = fft(b);
-rec3 = fft(c);
-
-U = fft(u);
 
 figure
-subplot(3,1,1)
-title("Sinc^2 vs Sinc")
-plot(t,a);
+plot(t,a), title("Sinc");
 xlabel("Time (s)")
 ylabel("Amplitude")
-legend("Sinc (10Hz)")
+legend("Sinc")
 
-subplot(3,1,2)
-plot(t,b);
-xlabel("Time (s)")
-ylabel("Amplitude")
-legend("Sinc (20Hz)")
 
-subplot(3,1,3)
-plot(t,c)
-xlabel("Time (s)")
-ylabel("Amplitude")
-legend("Sinc (30Hz)")
 
 figure
 title("Pulse shapes in frequency")
 plot(f,abs(rec))
-hold on
-plot(f,abs(rec2))
-plot(f,abs(rec3))
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
 
 
-figure
-title("Combined fft into one plot")
-plot(f,abs(U))
-xlabel("Frequency (Hz)")
-ylabel("Amplitude")
 
 %% Up Convert
 
@@ -159,27 +109,24 @@ title("pulse in freq")
 plot(f,abs(up_rec));
 xlabel("Frequency sinc 10(Hz)")
 ylabel("Amplitude")
-
 legend("Rectangle")
 
 subplot(3,1,2)
 plot(f,abs(up_rec2));
 xlabel("Frequency sinc 20(Hz)")
 ylabel("Amplitude")
+legend("Rectangle")
 
-legend("Rectangle","rec")
 subplot(3,1,3)
 plot(f,abs(up_rec3))
 xlabel("Frequency sinc 30(Hz)")
 ylabel("Amplitude")
-
-legend("Rectangle","rec")
+legend("Rectangle")
 
 figure
 plot(f,abs(up_recU)), title("All combined") % This looks wrong asf
 xlabel("Frequency (Hz)")
 ylabel("Amplitude")
-
 legend("Rectangle")
 
 
@@ -207,6 +154,12 @@ for i = 1:numel(x_message)
 end
 
 x_message = newArray;  %Binary array representing text, with same bitrate as x_n
+x_message = [x_message, 0];
+tTest = 0:dt:(size(x_message,2) - 1)*dt;
+
+figure 
+stem(tTest,x_message), title("Bits of inputed message");
+xlabel("Time(s)")
 
 
 figure
@@ -214,15 +167,16 @@ stem(0:dt:Ts*4*(N-1) ,x_n), title("Random Values Between [-1,1]");
 xlabel("Time(s)")
 
 
-messageA = conv(x_n, up_rec);  % Create individual signals with each sinc function
-messageB = conv(x_n, up_rec2);
-messageC = conv(x_n, up_rec3);
+messageA = conv(up_rec, x_n);  % Create individual signals with each sinc function
+messageB = conv(up_rec2, x_n);
+messageC = conv(up_rec3, x_n);
 messageU = messageA + messageB + messageC;
+checkU =  correc(1,messageU);
 
-checkA = correc(1, messageA); % Hold on to correct values to compare later
-checkB = correc(1, messageB);
-checkC = correc(1, messageC);
-checkU = correc(1, messageU);
+msgA = conv(x_message, up_rec, "same");
+msgB = conv(x_message, up_rec2, "same");
+msgC = conv(x_message, up_rec3, "same");
+msg = msgA + msgB + msgC;
 
 % figure
 % plot(t, messageA), title("Message A") % Show original msg
@@ -246,12 +200,17 @@ N = 5;
 sigma = 1;  % Arbitrary Val. was changed for different coefficients
 
 noise = sigma * randn(1,length(messageA));
+noise_msg = sigma * randn(1,length(msgA));
 
 noise_sigA = noise + messageA; % This message is made up of the three pulse shapes at 10,20,30Hz respectively
 noise_sigB = noise + messageB;
 noise_sigC = noise + messageC;
 noise_sigU = noise_sigA + noise_sigB + noise_sigC;
 
+msgNoiseA = noise_msg + msgA;
+msgNoiseB = noise_msg + msgB;
+msgNoiseC = noise_msg + msgB;
+msgNoise = msgNoiseA + msgNoiseB + msgNoiseC;
 
 figure
 plot(t, messageU), title("Noise-Free Message (All)")
@@ -263,6 +222,16 @@ plot(t, noise_sigU), title("Noisy Message (All)")
 xlabel("Time(s)")
 ylabel("Amplitude")
 
+
+figure
+plot(tTest, msg), title("Noise-Free of Input Message")
+xlabel("Time(s)")
+ylabel("Amplitude")
+
+figure
+plot(tTest, msgNoise), title("Noisy Message of Input Message")
+xlabel("Time(s)")
+ylabel("Amplitude")
 
 % figure
 % stem(t, messageA), title("Noise-Free Message b (1/2*Ts)")
@@ -294,39 +263,21 @@ ylabel("Amplitude")
 
 % Signed based match
 downMsgA = noise_sigA .* cos(w*t);
-compareA = signBased(downMsgA, 1);
 
 downMsgB = noise_sigB .* cos(w2*t);
-compareB = signBased(downMsgB, 1);
 
 downMsgC = noise_sigC .* cos(w3*t);
-compareC = signBased(downMsgC, 1);
-
-compareU = (compareA + compareB + compareC) /3;
 
 downMsgU = downMsgC + downMsgA + downMsgB;
 
-% figure
-% stem(t,compareA), title("Check A");
-% hold on
-% stem(t, checkA);
-% 
-% figure
-% stem(t,compareB), title("Check B");
-% hold on
-% stem(t, checkB), title("Check C");
-% 
-% figure
-% stem(t,compareC);
-% hold on
-% stem(t, checkC);
 
-figure 
-stem(t, compareU)
-hold on
-stem(t, checkU)
+downRealA =  msgNoiseA .* cos(w*tTest); % Input message down conversion
 
-%%
+downRealB = msgNoiseB .* cos(w2*tTest);
+
+downRealC = msgNoiseC .* cos(w3*tTest);
+
+downReal = downRealA + downRealB + downRealC;
 
 % Matched Filter Received
 
@@ -335,15 +286,35 @@ downMsgB = conv(downMsgB, b, "same");
 downMsgC = conv(downMsgC, c, "same");
 downMsgU = conv(downMsgU, u, "same");
 
+downRealA = conv(downRealA, a, "same");
+downRealB = conv(downRealB, a, "same");
+downRealC = conv(downRealC, a, "same");
+downReal = conv(downReal, a, "same");
+
 figure 
-plot(t,downMsgU)
+plot(t,downMsgU), title("Down Converted")
+
+
+figure
+plot(tTest,downReal), title("Down converted actual message")
 %%
 compareU = signBased(downMsgU,1);
 
+compareReal = signBased(downReal,1);
+
 figure 
-stem(t,compareU)
+stem(t,compareU, 'red')
+hold on
+stem(t, checkU, 'green')
+
+legend("Wrong", "Correct")
 
 
+figure 
+stem(t,comapreReal, 'red')
+hold on
+
+legend("Wrong", "Correct")
 
 
 %% Functions Used
@@ -352,7 +323,6 @@ function [x_n] = bitRate(x)
 N = 5;
 len = 81;
 
-range = 0:(len - 1)/x: (N-1) * len;
 x_n = zeros(1,len * (N-1) - (N-1));
 
 for n = 1:(len - 1)/x:(N-1) * len
@@ -364,7 +334,7 @@ end
 function [signBasedFilter] = signBased(noise_sig, x)
 signBasedFilter = zeros(size(noise_sig));
 
-for i = 1:80:size(noise_sig,2)
+for i = 1:80:size(noise_sig,2) - 1
     if (noise_sig(i) > 0)
         signBasedFilter(i) = 1;
     end
@@ -377,12 +347,12 @@ end
 function [correct] = correc(x, message)
 correct = zeros(size(message));
 
-for i = 1:size(message,2)/x:size(message,2)
+for i = 1:80/x:size(message,2) -1 
     if (message(i) > 0)
         correct(i) = 1;
     end
     if (message(i) < 0)
-        correct(i) = 0;
+        correct(i) = -1;
     end
 end
 end
